@@ -20,3 +20,15 @@ func TestBasicApiCalls(t *testing.T) {
 		t.Errorf("Failed to delete key from DB")
 	}
 }
+
+func TestLoadDatabaseFromWal(t *testing.T) {
+	d := loadDatabaseFromWal("test_data/wal")
+
+	if d.Get("key") != "" {
+		t.Errorf("Loaded database is not correct (key)")
+	}
+
+	if d.Get("key2") != "test" {
+		t.Errorf("Loaded database is not correct (key2)")
+	}
+}

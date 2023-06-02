@@ -1,0 +1,10 @@
+syntax = "proto3";
+package yadb;
+
+option go_package = "github.com/itsaphel/yadb-go/proto-structs";
+
+message WalEntry {
+  string key = 1;
+  string value = 2;
+  bool tombstone = 3;
+}
