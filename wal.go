@@ -1,12 +1,10 @@
 package yadb
 
 import (
-	"bufio"
-	"fmt"
+	"github.com/matttproud/golang_protobuf_extensions/pbutil"
+	"io"
 	"log"
 	"os"
-
-	"google.golang.org/protobuf/proto"
 )
 
 type walFile struct {
@@ -20,12 +18,15 @@ func (wal *walFile) LoadIntoMap(m map[string]string) {
 	}
 	defer f.Close()
 
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+	for {
 		walEntry := &WalEntry{}
-		if err := proto.Unmarshal(scanner.Bytes(), walEntry); err != nil {
-			log.Fatalln("Encountered error while reading WAL file lines.\nLine:", scanner.Text(), "\nError: ", err)
+		_, err := pbutil.ReadDelimited(f, walEntry)
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				log.Fatalln("Encountered error while reading WAL file lines. Error:", err)
+			}
 		}
 
 		if walEntry.Tombstone {
@@ -33,10 +34,6 @@ func (wal *walFile) LoadIntoMap(m map[string]string) {
 		} else {
 			m[walEntry.Key] = walEntry.Value
 		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatalln("Encountered error while reading WAL file.", err)
 	}
 }
 
@@ -46,18 +43,13 @@ func (wal *walFile) LoadIntoMap(m map[string]string) {
 //
 // Any DML must be logged to the WAL to ensure durability
 func (wal *walFile) Write(e *WalEntry) {
-	out, err := proto.Marshal(e)
-	if err != nil {
-		log.Fatalln("Failed to encode WalEntry for persistence.", err)
-	}
-
 	f, err := os.OpenFile(wal.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open WAL file.", err)
 	}
 	defer f.Close()
 
-	_, err = f.Write(out)
+	pbutil.WriteDelimited(f, e)
 	if err != nil {
 		log.Fatalln("Failed to write WalEntry to disk.", err)
 	}
