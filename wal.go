@@ -49,6 +49,7 @@ func (wal *walFile) loadIntoMap(m map[string]string) {
 //
 // Any DML must be logged to the WAL to ensure durability
 // TODO should we make every WAL entry one block in size? (i.e. add padding where required)?
+// TODO should we write some kind of checksum (like Luhn's/CRC)? Why?
 func (wal *walFile) write(e *protoc.WalEntry) {
 	f, err := os.OpenFile(wal.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
