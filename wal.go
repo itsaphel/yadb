@@ -13,7 +13,7 @@ type walFile struct {
 }
 
 func (wal *walFile) LoadIntoMap(m map[string]string) {
-	f, err := os.OpenFile(wal.filename, os.O_APPEND|os.O_CREATE|os.O_RDONLY, 0644)
+	f, err := os.OpenFile(wal.filename, os.O_RDONLY, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open WAL file.", err)
 	}
