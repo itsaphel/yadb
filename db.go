@@ -1,5 +1,7 @@
 package yadb
 
+import "yadb-go/protoc"
+
 type database struct {
 	store map[string]string
 	wal   walFile
@@ -38,7 +40,7 @@ func (d *database) Get(key string) string {
 
 func (d *database) Set(key string, value string) {
 	d.store[key] = value
-	d.wal.Write(&WalEntry{
+	d.wal.Write(&protoc.WalEntry{
 		Key:   key,
 		Value: value,
 	})
@@ -46,7 +48,7 @@ func (d *database) Set(key string, value string) {
 
 func (d *database) Delete(key string) {
 	delete(d.store, key)
-	d.wal.Write(&WalEntry{
+	d.wal.Write(&protoc.WalEntry{
 		Key:       key,
 		Tombstone: true,
 	})

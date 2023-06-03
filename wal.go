@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"yadb-go/protoc"
 )
 
 type walFile struct {
@@ -19,7 +20,7 @@ func (wal *walFile) LoadIntoMap(m map[string]string) {
 	defer f.Close()
 
 	for {
-		walEntry := &WalEntry{}
+		walEntry := &protoc.WalEntry{}
 		_, err := pbutil.ReadDelimited(f, walEntry)
 		if err != nil {
 			if err == io.EOF {
@@ -42,7 +43,8 @@ func (wal *walFile) LoadIntoMap(m map[string]string) {
 // This log file can be used to recover the in-memory map on restart
 //
 // Any DML must be logged to the WAL to ensure durability
-func (wal *walFile) Write(e *WalEntry) {
+// TODO should we make every WAL entry one block in size? (i.e. add padding where required)?
+func (wal *walFile) Write(e *protoc.WalEntry) {
 	f, err := os.OpenFile(wal.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open WAL file.", err)
