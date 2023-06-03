@@ -3,7 +3,7 @@ package yadb
 import "testing"
 
 func TestBasicApiCalls(t *testing.T) {
-	d := newDatabase()
+	d := NewDatabase()
 
 	key := "hello"
 	value := "world"
@@ -22,13 +22,13 @@ func TestBasicApiCalls(t *testing.T) {
 }
 
 func TestLoadDatabaseFromWal(t *testing.T) {
-	d := loadDatabaseFromWal("test_data/wal")
+	d := LoadDatabaseFromWal("test_data/wal")
 
 	if d.Get("key") != "" {
-		t.Errorf("Loaded database is not correct (key)")
+		t.Errorf("Loaded Database is not correct (key)")
 	}
 
 	if d.Get("key2") != "test" {
-		t.Errorf("Loaded database is not correct (key2)")
+		t.Errorf("Loaded Database is not correct (key2)")
 	}
 }

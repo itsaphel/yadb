@@ -8,11 +8,16 @@ import (
 	"yadb-go/protoc"
 )
 
+// Issues with current WAL approach:
+// 1. We can end up with huge WAL files. They're never pruned
+// 2. Map always needs to be entirely loaded into memory.
+//    So cannot have a Database exceeding memory capacity
+
 type walFile struct {
 	filename string
 }
 
-func (wal *walFile) LoadIntoMap(m map[string]string) {
+func (wal *walFile) loadIntoMap(m map[string]string) {
 	f, err := os.OpenFile(wal.filename, os.O_RDONLY, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open WAL file.", err)
@@ -38,13 +43,13 @@ func (wal *walFile) LoadIntoMap(m map[string]string) {
 	}
 }
 
-// Write writes information regarding a key-value pair to a log file on disk
+// write writes information regarding a key-value pair to a log file on disk
 // We use Protocol Buffers to serialise the WalEntry into a sequence of bytes
 // This log file can be used to recover the in-memory map on restart
 //
 // Any DML must be logged to the WAL to ensure durability
 // TODO should we make every WAL entry one block in size? (i.e. add padding where required)?
-func (wal *walFile) Write(e *protoc.WalEntry) {
+func (wal *walFile) write(e *protoc.WalEntry) {
 	f, err := os.OpenFile(wal.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open WAL file.", err)

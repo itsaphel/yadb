@@ -2,17 +2,17 @@ package yadb
 
 import "yadb-go/protoc"
 
-type database struct {
+type Database struct {
 	store map[string]string
 	wal   walFile
 }
 
-func newDatabase() *database {
+func NewDatabase() *Database {
 	wal := walFile{
 		filename: "wal",
 	}
 
-	d := &database{
+	d := &Database{
 		store: make(map[string]string),
 		wal:   wal,
 	}
@@ -20,35 +20,35 @@ func newDatabase() *database {
 	return d
 }
 
-func loadDatabaseFromWal(walFileName string) *database {
+func LoadDatabaseFromWal(walFileName string) *Database {
 	wal := walFile{
 		filename: walFileName,
 	}
 
-	d := &database{
+	d := &Database{
 		store: make(map[string]string),
 		wal:   wal,
 	}
-	wal.LoadIntoMap(d.store)
+	wal.loadIntoMap(d.store)
 
 	return d
 }
 
-func (d *database) Get(key string) string {
+func (d *Database) Get(key string) string {
 	return d.store[key]
 }
 
-func (d *database) Set(key string, value string) {
+func (d *Database) Set(key string, value string) {
 	d.store[key] = value
-	d.wal.Write(&protoc.WalEntry{
+	d.wal.write(&protoc.WalEntry{
 		Key:   key,
 		Value: value,
 	})
 }
 
-func (d *database) Delete(key string) {
+func (d *Database) Delete(key string) {
 	delete(d.store, key)
-	d.wal.Write(&protoc.WalEntry{
+	d.wal.write(&protoc.WalEntry{
 		Key:       key,
 		Tombstone: true,
 	})
