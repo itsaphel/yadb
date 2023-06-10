@@ -1,7 +1,7 @@
 syntax = "proto3";
 package yadb;
 
-option go_package = "github.com/itsaphel/yadb-go/proto-structs";
+option go_package = "github.com/itsaphel/yadb-go/protoc;protoc";
 
 message WalEntry {
   string key = 1;
