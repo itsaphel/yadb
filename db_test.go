@@ -1,9 +1,13 @@
 package yadb
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestBasicApiCalls(t *testing.T) {
-	d := NewDatabase()
+	file, _ := os.CreateTemp("", "yadb_wal")
+	d := NewDatabase(file.Name())
 
 	key := "hello"
 	value := "world"

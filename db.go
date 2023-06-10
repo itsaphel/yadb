@@ -7,9 +7,9 @@ type Database struct {
 	wal   walFile
 }
 
-func NewDatabase() *Database {
+func NewDatabase(walFileName string) *Database {
 	wal := walFile{
-		filename: "wal",
+		filename: walFileName,
 	}
 
 	d := &Database{
