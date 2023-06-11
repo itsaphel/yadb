@@ -7,6 +7,7 @@ type Database struct {
 	wal   walFile
 }
 
+// TODO will also need a data file path
 func NewDatabase(walFileName string) *Database {
 	wal := walFile{
 		filename: walFileName,
