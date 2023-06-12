@@ -7,7 +7,8 @@ func TestBranchOperations(t *testing.T) {
 
 	tree.Insert("key", "val")
 
-	if tree.Get("key").value != "val" {
+	ret := tree.Get("key")
+	if ret == nil || ret.key != "key" || ret.value != "val" {
 		t.Errorf("Could not retrieve value of a key added to the tree")
 	}
 
