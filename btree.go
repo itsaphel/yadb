@@ -152,24 +152,32 @@ func (n *Node) findLeafNodeForKey(key string) *Node {
 // If found, returns KV-pair and corresponding index
 // Otherwise returns nil and the expected index of its pointers
 func (n *Node) findKeyInLeaf(key string) (*KeyValuePair, int) {
-	// TODO broken, at least for leaf nodes. Just seq scan for now.
-	//i, exact := n.findIndex(key)
-	//
-	//if exact {
-	//	return n.pointers[i].(*KeyValuePair), i
-	//} else {
-	//	return nil, i
-	//}
-	for i := 0; i < len(n.pointers); i++ {
-		kv := n.pointers[i].(*KeyValuePair)
-		if kv.key == key {
-			return kv, i
-		} else if kv.key > key {
-			return nil, i
+	var exact bool
+	i := sort.Search(len(n.pointers), func(i int) bool {
+		ret := strings.Compare(key, n.pointers[i].(*KeyValuePair).key)
+		if ret == 0 {
+			exact = true
 		}
+		return ret != -1
+	})
+
+	if exact {
+		return n.pointers[i].(*KeyValuePair), i
+	} else {
+		return nil, i
 	}
 
-	return nil, len(n.pointers)
+	// Alt implementation:
+	//for i := 0; i < len(n.pointers); i++ {
+	//	kv := n.pointers[i].(*KeyValuePair)
+	//	if kv.key == key {
+	//		return kv, i
+	//	} else if kv.key > key {
+	//		return nil, i
+	//	}
+	//}
+	//
+	//return nil, len(n.pointers)
 }
 
 // insert a key-value pair into a leaf node.
