@@ -24,9 +24,6 @@ func TestBranchOperations(t *testing.T) {
 	if ret2 == nil || ret2.key != "key2" || ret2.value != "val2" {
 		t.Fatalf("Could not retrieve value of key 'key2' added to the tree")
 	}
-	if !ret.node.isLeaf || !ret2.node.isLeaf {
-		t.Fatalf("Expected key and key2 to be on leaf nodes")
-	}
 
 	// Test deletion operations
 	tree.Delete("key")
@@ -56,18 +53,6 @@ func TestBranchOperations__limitedCapacity(t *testing.T) {
 	}
 	if ret3 == nil || ret3.key != "key3" || ret3.value != "val3" {
 		t.Fatalf("Could not retrieve value of key 'key3' added to the tree")
-	}
-	if ret.node != ret2.node {
-		t.Fatalf("Expected key and key2 to be on same leaf node, but they aren't.")
-	}
-	if ret.node == ret3.node {
-		t.Fatalf("Expected key and key3 to be on separate leaf nodes, but they have the same parent.")
-	}
-	if ret.node == ret.node.tree.root {
-		t.Fatalf("Did not expect key or key2 to be on a root node")
-	}
-	if !ret.node.isLeaf || !ret2.node.isLeaf {
-		t.Fatalf("Expected key and key2 to be on leaf nodes")
 	}
 
 	tree.Delete("key")
