@@ -165,22 +165,9 @@ func (n *Node) findKeyInLeaf(key string) (*KeyValuePair, int) {
 	} else {
 		return nil, i
 	}
-
-	// Alt implementation:
-	//for i := 0; i < len(n.pointers); i++ {
-	//	kv := n.pointers[i].(*KeyValuePair)
-	//	if kv.key == key {
-	//		return kv, i
-	//	} else if kv.key > key {
-	//		return nil, i
-	//	}
-	//}
-	//
-	//return nil, len(n.pointers)
 }
 
 // putKey promotes a key to an internal node
-// TODO logical error in this method
 func (n *Node) putKey(key string, pointer *Node) {
 	i, _ := n.findIndex(key)
 
@@ -279,7 +266,6 @@ func (n *Node) split() {
 	if n.parent == nil {
 		newRoot := n.tree.NewEmptyNode(false)
 		newRoot.pointers = append(newRoot.pointers, n)
-		//newRoot.putKey(splitIndexKey, next)
 		n.tree.root = newRoot
 		n.parent = newRoot
 	}
