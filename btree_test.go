@@ -62,6 +62,37 @@ func TestBranchOperations__limitedCapacity(t *testing.T) {
 	}
 }
 
+// In this test, the height is >= 2
+func TestBranchOperations__largeHeight(t *testing.T) {
+	tree := NewTree(2)
+
+	tree.Insert("key", "val")
+	tree.Insert("key2", "val2")
+	tree.Insert("key3", "val3")
+	tree.Insert("key4", "val4")
+	tree.Insert("key5", "val5")
+	tree.Insert("key6", "val6")
+
+	ret := tree.Get("key")
+	ret2 := tree.Get("key2")
+	ret3 := tree.Get("key3")
+	if ret == nil || ret.key != "key" || ret.value != "val" {
+		t.Fatalf("Could not retrieve value of key 'key' added to the tree")
+	}
+	if ret2 == nil || ret2.key != "key2" || ret2.value != "val2" {
+		t.Fatalf("Could not retrieve value of key 'key2' added to the tree")
+	}
+	if ret3 == nil || ret3.key != "key3" || ret3.value != "val3" {
+		t.Fatalf("Could not retrieve value of key 'key3' added to the tree")
+	}
+
+	tree.Delete("key")
+
+	if tree.Get("key") != nil {
+		t.Fatalf("Delete did not remove item from tree")
+	}
+}
+
 // TODO implement
 func TestRangeScan(t *testing.T) {
 

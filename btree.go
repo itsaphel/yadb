@@ -250,7 +250,9 @@ func (n *Node) split() {
 
 	// Allocate a new node, transfer half of the tuples in this node to the
 	// new node. Set the parent of this new node as the original node's parent.
-	// Splitting is a recursive operation, the parents may need to be split.
+	// Splitting is a recursive operation; the parents may also need to be split.
+
+	// Pointers from index N/2 + 1 are moved to new node
 	splitIndex := n.tree.degree / 2
 	next := n.tree.NewEmptyNode(true)
 	next.keys = append(next.keys, n.keys[splitIndex+1:]...)
