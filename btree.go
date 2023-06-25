@@ -12,6 +12,7 @@
 package yadb
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
@@ -76,25 +77,17 @@ type Node struct {
 	tree   *Tree
 	parent *Node // Retain parent for rebalancing / splitting operations
 
-	keys     []string
-	pointers []interface{}
+	keys     []string      // Only set for internal nodes.
+	pointers []interface{} // For internal nodes, points to other internal nodes. For leaves, points to KV-pairs
 
 	isLeaf bool
 }
 
 func (tree *Tree) NewEmptyNode(isLeaf bool) *Node {
-	//return &Node{
-	//	tree:     tree,
-	//	children: make(nodes, 0),
-	//	tuples:   make(tuples, 0),
-	//	isLeaf:   isLeaf,
-	//	parent:   nil,
-	//}
-
 	return &Node{
 		tree:     tree,
 		parent:   nil,
-		keys:     make([]string, 0), // maybe size shouldn't be 0 - resizing time
+		keys:     make([]string, 0), // TODO maybe size shouldn't be 0 - resizing time
 		pointers: make([]interface{}, 0),
 		isLeaf:   isLeaf,
 	}
@@ -103,6 +96,13 @@ func (tree *Tree) NewEmptyNode(isLeaf bool) *Node {
 type KeyValuePair struct {
 	key   string
 	value string
+}
+
+func (kv *KeyValuePair) String() string {
+	if kv == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("KeyValuePair{key=%s, value=%s}", kv.key, kv.value)
 }
 
 // get returns a pointer to the KV Pair if the key exists under this node (or
@@ -119,7 +119,6 @@ func (n *Node) get(key string) *KeyValuePair {
 // findIndex returns the appropriate pointer to follow to find a key in a
 // B+ tree, and whether there was an exact match
 func (n *Node) findIndex(key string) (int, bool) {
-	// sort.Search does a binary search and returns the lowest index s.t. ret != -1
 	var exact bool
 	i := sort.Search(len(n.keys), func(i int) bool {
 		ret := strings.Compare(n.keys[i], key)
@@ -180,6 +179,24 @@ func (n *Node) findKeyInLeaf(key string) (*KeyValuePair, int) {
 	//return nil, len(n.pointers)
 }
 
+// putKey promotes a key to an internal node
+// TODO logical error in this method
+func (n *Node) putKey(key string, pointer *Node) {
+	i, _ := n.findIndex(key)
+
+	n.keys = append(n.keys, "")
+	n.pointers = append(n.pointers, nil)
+
+	// make space if index is not at the end
+	if i < len(n.keys) {
+		copy(n.keys[i+1:], n.keys[i:])
+		copy(n.pointers[i+2:], n.pointers[i+1:])
+	}
+
+	n.keys[i] = key
+	n.pointers[i+1] = pointer
+}
+
 // insert a key-value pair into a leaf node.
 func (n *Node) insert(pair *KeyValuePair) {
 	if !n.isLeaf {
@@ -193,11 +210,7 @@ func (n *Node) insert(pair *KeyValuePair) {
 		existing.value = pair.value
 	} else {
 		// Otherwise, allocate space for a new KV pair
-		n.keys = append(n.keys, "")
-		copy(n.keys[index+1:], n.keys[index:])
-		n.keys[index] = pair.key
-
-		n.pointers = append(n.pointers, &KeyValuePair{})
+		n.pointers = append(n.pointers, nil)
 		copy(n.pointers[index+1:], n.pointers[index:])
 		n.pointers[index] = pair
 	}
@@ -212,7 +225,7 @@ func (n *Node) delete(key string) {
 	// else
 	if kv != nil {
 		// remove the KV pair from the leaf's tuples
-		n.keys = append(n.keys[:i], n.keys[i+1:]...)
+		//n.keys = append(n.keys[:i], n.keys[i+1:]...)
 		n.pointers = append(n.pointers[:i], n.pointers[i+1:]...)
 	}
 
@@ -221,52 +234,59 @@ func (n *Node) delete(key string) {
 
 // Node maintenance operations
 
-// truncate functions remove items after index i, in a manner that prevents memleaks
+// truncate functions remove items after & including index i,
+// in a manner that prevents memleaks
 // see https://utcc.utoronto.ca/~cks/space/blog/programming/GoSlicesMemoryLeak
 
 func (n *Node) truncateKeys(index int) {
-	n.keys = n.keys[:index+1]
+	n.keys = n.keys[:index]
 }
 
 func (n *Node) truncatePointers(index int) {
-	for i := index + 1; i < len(n.pointers); i++ {
+	for i := index; i < len(n.pointers); i++ {
 		n.pointers[i] = nil
 	}
-	n.pointers = n.pointers[:index+1]
+	n.pointers = n.pointers[:index]
 }
 
 // splitLeaf splits a leaf node into two, if needed
 func (n *Node) split() {
-	if len(n.pointers) <= n.tree.degree {
+	if len(n.keys) <= n.tree.degree {
 		return
-	}
-
-	// If this is the root, we need to create a new root
-	if n.parent == nil {
-		n.parent = n.tree.NewEmptyNode(false)
-		n.parent.pointers = append(n.parent.pointers, n)
-		n.tree.root = n.parent
 	}
 
 	// Allocate a new node, transfer half of the tuples in this node to the
 	// new node. Set the parent of this new node as the original node's parent.
 	// Splitting is a recursive operation; the parents may also need to be split.
 
-	// Pointers from index N/2 + 1 are moved to new node
+	// Move items from index N/2 onwards to new node
 	splitIndex := n.tree.degree / 2
-	next := n.tree.NewEmptyNode(true)
-	next.keys = append(next.keys, n.keys[splitIndex+1:]...)
-	next.pointers = append(next.pointers, n.pointers[splitIndex+1:]...)
-	n.truncateKeys(splitIndex)
+	var splitIndexKey string
+	if n.isLeaf {
+		splitIndexKey = n.pointers[splitIndex].(*KeyValuePair).key
+	} else {
+		splitIndexKey = n.keys[splitIndex]
+	}
+	next := n.tree.NewEmptyNode(n.isLeaf)
+	next.pointers = append(next.pointers, n.pointers[splitIndex:]...)
+	if !n.isLeaf {
+		next.keys = append(next.keys, n.keys[splitIndex+1:]...) // intentionally not including key in next node, as it has been promoted
+		n.truncateKeys(splitIndex)
+	}
 	n.truncatePointers(splitIndex)
 
-	// Add first key and pointer to parent node
-	n.parent.keys = append(n.parent.keys, next.keys[0]) // TODO this is prob not correct location
-	n.parent.pointers = append(n.parent.pointers, next)
-
-	if n.parent != nil {
-		n.parent.split()
+	// If this is the root, we need to create a new root
+	if n.parent == nil {
+		newRoot := n.tree.NewEmptyNode(false)
+		newRoot.pointers = append(newRoot.pointers, n)
+		//newRoot.putKey(splitIndexKey, next)
+		n.tree.root = newRoot
+		n.parent = newRoot
 	}
+	next.parent = n.parent
+	// Add the split index to the parent node
+	n.parent.putKey(splitIndexKey, next)
+	n.parent.split()
 }
 
 // TODO impl

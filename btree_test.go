@@ -6,31 +6,18 @@ import "testing"
 func TestBranchOperations(t *testing.T) {
 	tree := NewTree(2)
 
-	// Ensure we can try to get a key in an empty tree
-	ret := tree.Get("invalidKey")
-	if ret != nil {
-		t.Fatalf("Found a value for an invalid key")
-	}
+	assertKeyNotFound(t, tree, "someInvalidKey")
 
 	// Test insert/get operations
 	tree.Insert("key", "val")
 	tree.Insert("key2", "val2")
 
-	ret = tree.Get("key")
-	ret2 := tree.Get("key2")
-	if ret == nil || ret.key != "key" || ret.value != "val" {
-		t.Fatalf("Could not retrieve value of key 'key' added to the tree")
-	}
-	if ret2 == nil || ret2.key != "key2" || ret2.value != "val2" {
-		t.Fatalf("Could not retrieve value of key 'key2' added to the tree")
-	}
+	assertKeyFound(t, tree, "key", "val")
+	assertKeyFound(t, tree, "key2", "val2")
 
 	// Test deletion operations
 	tree.Delete("key")
-
-	if tree.Get("key") != nil {
-		t.Fatalf("Delete did not remove item from tree")
-	}
+	assertKeyNotFound(t, tree, "key")
 }
 
 // Test that we can get, insert, and delete into/from a b-tree
@@ -42,24 +29,12 @@ func TestBranchOperations__limitedCapacity(t *testing.T) {
 	tree.Insert("key2", "val2")
 	tree.Insert("key3", "val3")
 
-	ret := tree.Get("key")
-	ret2 := tree.Get("key2")
-	ret3 := tree.Get("key3")
-	if ret == nil || ret.key != "key" || ret.value != "val" {
-		t.Fatalf("Could not retrieve value of key 'key' added to the tree")
-	}
-	if ret2 == nil || ret2.key != "key2" || ret2.value != "val2" {
-		t.Fatalf("Could not retrieve value of key 'key2' added to the tree")
-	}
-	if ret3 == nil || ret3.key != "key3" || ret3.value != "val3" {
-		t.Fatalf("Could not retrieve value of key 'key3' added to the tree")
-	}
+	assertKeyFound(t, tree, "key", "val")
+	assertKeyFound(t, tree, "key2", "val2")
+	assertKeyFound(t, tree, "key3", "val3")
 
 	tree.Delete("key")
-
-	if tree.Get("key") != nil {
-		t.Fatalf("Delete did not remove item from tree")
-	}
+	assertKeyNotFound(t, tree, "key")
 }
 
 // In this test, the height is >= 2
@@ -73,31 +48,34 @@ func TestBranchOperations__largeHeight(t *testing.T) {
 	tree.Insert("key5", "val5")
 	tree.Insert("key6", "val6")
 
-	ret := tree.Get("key")
-	ret2 := tree.Get("key2")
-	ret3 := tree.Get("key3")
-	if ret == nil || ret.key != "key" || ret.value != "val" {
-		t.Fatalf("Could not retrieve value of key 'key' added to the tree")
-	}
-	if ret2 == nil || ret2.key != "key2" || ret2.value != "val2" {
-		t.Fatalf("Could not retrieve value of key 'key2' added to the tree")
-	}
-	if ret3 == nil || ret3.key != "key3" || ret3.value != "val3" {
-		t.Fatalf("Could not retrieve value of key 'key3' added to the tree")
-	}
+	assertKeyFound(t, tree, "key", "val")
+	assertKeyFound(t, tree, "key2", "val2")
+	assertKeyFound(t, tree, "key3", "val3")
+	assertKeyFound(t, tree, "key4", "val4")
+	assertKeyFound(t, tree, "key5", "val5")
+	assertKeyFound(t, tree, "key6", "val6")
 
 	tree.Delete("key")
-
-	if tree.Get("key") != nil {
-		t.Fatalf("Delete did not remove item from tree")
-	}
+	assertKeyNotFound(t, tree, "key")
 }
+
+// TODO test odd degree too
 
 // TODO implement
 func TestRangeScan(t *testing.T) {
 
 }
 
-// TODO:
-// 1. Inserting into blank trees should work well
-// 2. Splitting and merging operations
+func assertKeyFound(t *testing.T, tree *Tree, key string, expectedValue string) {
+	res := tree.Get(key)
+	if res == nil || res.key != key || res.value != expectedValue {
+		t.Fatalf("Key '%s' did not have expected value '%s'. Found: %s", key, expectedValue, res.String())
+	}
+}
+
+func assertKeyNotFound(t *testing.T, tree *Tree, key string) {
+	res := tree.Get(key)
+	if res != nil {
+		t.Fatalf("Found a value for an key '%s', but expected not to.", key)
+	}
+}
