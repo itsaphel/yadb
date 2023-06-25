@@ -122,11 +122,11 @@ func (n *Node) findIndex(key string) (int, bool) {
 	// sort.Search does a binary search and returns the lowest index s.t. ret != -1
 	var exact bool
 	i := sort.Search(len(n.keys), func(i int) bool {
-		ret := strings.Compare(key, n.keys[i])
+		ret := strings.Compare(n.keys[i], key)
 		if ret == 0 {
 			exact = true
 		}
-		return ret != 0
+		return ret == 1
 	})
 
 	if !exact && len(n.keys) > 1 {
@@ -154,11 +154,11 @@ func (n *Node) findLeafNodeForKey(key string) *Node {
 func (n *Node) findKeyInLeaf(key string) (*KeyValuePair, int) {
 	var exact bool
 	i := sort.Search(len(n.pointers), func(i int) bool {
-		ret := strings.Compare(key, n.pointers[i].(*KeyValuePair).key)
+		ret := strings.Compare(n.pointers[i].(*KeyValuePair).key, key)
 		if ret == 0 {
 			exact = true
 		}
-		return ret != -1
+		return ret >= 0
 	})
 
 	if exact {
