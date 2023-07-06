@@ -115,9 +115,7 @@ func (n *Node) get(key string) *KeyValuePair {
 
 // findIndex returns the index of the child node which should contain the key,
 // and whether there was an exact match
-// TODO we probably don't need the exact match boolean anymore, as the new
-// version of this method is only ran on internal nodes.
-func (n *Node) findIndex(key string) (int, bool) {
+func (n *Node) findIndex(key string) int {
 	var exact bool
 	i := sort.Search(len(n.keys), func(i int) bool {
 		ret := strings.Compare(n.keys[i], key)
@@ -131,7 +129,7 @@ func (n *Node) findIndex(key string) (int, bool) {
 		i--
 	}
 
-	return i, exact
+	return i
 }
 
 // findLeafNodeForKey finds the leaf node that should contain the key
@@ -142,7 +140,7 @@ func (n *Node) findLeafNodeForKey(key string) *Node {
 
 	// Find the child internal Node under which the key would lie, if it were
 	// in the tree rooted by the current node
-	i, _ := n.findIndex(key)
+	i := n.findIndex(key)
 	return n.pointers[i].(*Node).findLeafNodeForKey(key)
 }
 
@@ -168,7 +166,7 @@ func (n *Node) findKeyInLeaf(key string) (*KeyValuePair, int) {
 
 // putKey promotes a key to an internal node
 func (n *Node) putKey(key string, pointer *Node) {
-	i, _ := n.findIndex(key)
+	i := n.findIndex(key)
 
 	n.keys = append(n.keys, "")
 	n.pointers = append(n.pointers, nil)
