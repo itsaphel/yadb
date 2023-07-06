@@ -1,13 +1,11 @@
 // This file implements B+ Trees for use in a database system.
 //
-// All values are stored solely on the leaf level. All operations (like inserting,
+// All KV-pairs are stored solely on the leaf level. All operations (like inserting,
 // updating, removing and retrieval) affect only leaf nodes. They propagate to
 // higher levels only during splits and merges.
 //
 // In a B+ Tree, we access at most log_C(N) pages (where N is number of tuples
 // and C is node capacity). The number of comparisons is log_2(N)
-// TODOs:
-// * How do we record the key range supported by a node?
 
 package yadb
 
@@ -64,7 +62,7 @@ func (tree *Tree) Delete(key string) {
 	leaf.delete(key)
 }
 
-// Node represents an internal node in a B+ Tree.
+// Node represents a node in a B+ Tree.
 // Each internal node holds up to N keys and N+1 pointers to child nodes.
 // Each leaf node holds N pointers to heap data
 //
@@ -72,7 +70,7 @@ func (tree *Tree) Delete(key string) {
 // capacity. We wish to keep a high occupancy. Splits and merges will be triggered
 // to maintain this property.
 //
-// children are stored in sorted order to allow for binary searches.
+// Keys are stored in sorted order to allow for binary searches.
 type Node struct {
 	tree   *Tree
 	parent *Node // Retain parent for rebalancing / splitting operations
@@ -106,8 +104,7 @@ func (kv *KeyValuePair) String() string {
 }
 
 // get returns a pointer to the KV Pair if the key exists under this node (or
-// its children, recursively), otherwise returns nil. In either case, the
-// leaf node is also returned.
+// its children, recursively), otherwise returns nil.
 func (n *Node) get(key string) *KeyValuePair {
 	leaf := n.findLeafNodeForKey(key)
 
@@ -116,8 +113,10 @@ func (n *Node) get(key string) *KeyValuePair {
 	return pair
 }
 
-// findIndex returns the appropriate pointer to follow to find a key in a
-// B+ tree, and whether there was an exact match
+// findIndex returns the index of the child node which should contain the key,
+// and whether there was an exact match
+// TODO we probably don't need the exact match boolean anymore, as the new
+// version of this method is only ran on internal nodes.
 func (n *Node) findIndex(key string) (int, bool) {
 	var exact bool
 	i := sort.Search(len(n.keys), func(i int) bool {
@@ -212,7 +211,7 @@ func (n *Node) delete(key string) {
 	// else
 	if kv != nil {
 		// remove the KV pair from the leaf's tuples
-		//n.keys = append(n.keys[:i], n.keys[i+1:]...)
+		// n.keys = append(n.keys[:i], n.keys[i+1:]...)
 		n.pointers = append(n.pointers[:i], n.pointers[i+1:]...)
 	}
 
