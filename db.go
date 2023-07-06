@@ -3,8 +3,9 @@ package yadb
 import "yadb-go/protoc"
 
 type Database struct {
-	store map[string]string
-	wal   walFile
+	store      map[string]string
+	wal        walFile
+	bufferPool *BufferPool
 }
 
 // TODO will also need a data file path
@@ -14,23 +15,17 @@ func NewDatabase(walFileName string) *Database {
 	}
 
 	d := &Database{
-		store: make(map[string]string),
-		wal:   wal,
+		store:      make(map[string]string),
+		wal:        wal,
+		bufferPool: new(BufferPool),
 	}
 
 	return d
 }
 
 func LoadDatabaseFromWal(walFileName string) *Database {
-	wal := walFile{
-		filename: walFileName,
-	}
-
-	d := &Database{
-		store: make(map[string]string),
-		wal:   wal,
-	}
-	wal.loadIntoMap(d.store)
+	d := NewDatabase(walFileName)
+	d.wal.loadIntoMap(d.store)
 
 	return d
 }
