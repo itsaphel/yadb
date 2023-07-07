@@ -40,6 +40,8 @@ func ConstructBufferPool() *BufferPool{
 		bpPtr.frames[i].dirty = false 
 		bpPtr.freeList[i] = i // all frames are free at the start  
 	}
+
+	return bpPtr
 }
 
 
