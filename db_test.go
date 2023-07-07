@@ -3,6 +3,8 @@ package yadb
 import (
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBasicApiCalls(t *testing.T) {
@@ -13,26 +15,15 @@ func TestBasicApiCalls(t *testing.T) {
 	value := "world"
 
 	d.Set(key, value)
-
-	if d.Get(key) != "world" {
-		t.Fatalf("Failed to get key from DB")
-	}
+	assert.Equal(t, d.Get(key), "world")
 
 	d.Delete(key)
-
-	if d.Get(key) != "" {
-		t.Fatalf("Failed to delete key from DB")
-	}
+	assert.Equal(t, d.Get(key), "")
 }
 
 func TestLoadDatabaseFromWal(t *testing.T) {
 	d := LoadDatabaseFromWal("test_data/wal")
 
-	if d.Get("key") != "" {
-		t.Fatalf("Loaded Database is not correct (key)")
-	}
-
-	if d.Get("key2") != "test" {
-		t.Fatalf("Loaded Database is not correct (key2)")
-	}
+	assert.Equal(t, d.Get("key"), "")
+	assert.Equal(t, d.Get("key2"), "test")
 }
