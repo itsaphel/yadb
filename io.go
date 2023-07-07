@@ -7,11 +7,15 @@ import (
 
 const PageSizeInBytes = 8192 // 8kB
 
-type DiskManager struct {
+type DiskManager interface {
+	ReadPage(pageId PageId) (*Page, error)
+}
+
+type IODiskManager struct {
 	filename string
 }
 
-func (d DiskManager) ReadPage(pageId PageId) (*Page, error) {
+func (d *IODiskManager) ReadPage(pageId PageId) (*Page, error) {
 	f, err := os.OpenFile(d.filename, os.O_RDONLY, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open data file.", err)

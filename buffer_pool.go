@@ -11,7 +11,28 @@ type BufferPool struct {
 	pages     [MaxPoolSize]*Page
 	freeList  []FrameId // frames that are not currently in use
 	// replacer  *Replacer // some kind of replacement policy
-	diskManager *DiskManager
+	diskManager DiskManager
+}
+
+func NewBufferPool() *BufferPool {
+	diskManager := new(IODiskManager)
+	return NewBufferPoolWithManager(diskManager)
+}
+
+func NewBufferPoolWithManager(diskManager DiskManager) *BufferPool {
+	freeList := make([]FrameId, 0)
+	pages := [MaxPoolSize]*Page{}
+	for i := 0; i < MaxPoolSize; i++ {
+		pages[i] = nil
+		freeList = append(freeList, FrameId(i))
+	}
+
+	return &BufferPool{
+		pageTable:   make(map[PageId]FrameId),
+		pages:       [MaxPoolSize]*Page{},
+		freeList:    freeList,
+		diskManager: diskManager,
+	}
 }
 
 // FetchPage returns a pointer to a Page containing the page ID.
@@ -44,7 +65,7 @@ func (pool *BufferPool) FetchPage(pageId PageId) *Page {
 }
 
 // FlushPage flushes a page to disk
-func (pool *BufferPool) FlushPage(pageId int) {
+func (pool *BufferPool) FlushPage(pageId PageId) {
 
 }
 
@@ -68,11 +89,11 @@ type Page struct {
 	// node     *Node  // null if the page is not yet loaded into memory
 }
 
-func (p Page) incrementRefCount() {
+func (p *Page) incrementRefCount() {
 	atomic.AddUint32(&p.refCount, 1)
 }
 
-func (p Page) decrementRefCount() {
+func (p *Page) decrementRefCount() {
 	atomic.AddUint32(&p.refCount, ^uint32(0))
 }
 
