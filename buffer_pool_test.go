@@ -48,7 +48,7 @@ func TestFetchPage_FailsIfIOError(t *testing.T) {
 
 	// Then
 
-	// Method should return nil
+	// Page should be nil
 	assert.Nil(t, page)
 
 	// And no changes should be reflected in the buffer pool
