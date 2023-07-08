@@ -63,7 +63,7 @@ type MockDiskManager struct {
 	mock.Mock
 }
 
-func (m MockDiskManager) ReadPage(pageId PageId) (*Page, error) {
+func (m *MockDiskManager) ReadPage(pageId PageId) (*Page, error) {
 	args := m.Called(pageId)
 	firstArg := args.Get(0)
 
