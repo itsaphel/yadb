@@ -19,9 +19,10 @@ func TestFetchPage(t *testing.T) {
 	pool := NewBufferPoolWithManager(diskManager)
 
 	// When
-	page := pool.FetchPage(1)
+	page, err := pool.FetchPage(1)
 
 	// Then
+	assert.NoError(t, err)
 
 	// Page contents should be as expected
 	assert.Equal(t, page.pageId, PageId(1))
@@ -41,12 +42,13 @@ func TestFetchPage_FailsIfIOError(t *testing.T) {
 	pool := NewBufferPoolWithManager(diskManager)
 
 	// When
-	page := pool.FetchPage(1)
+	page, err := pool.FetchPage(1)
 
 	// Then
 
 	// Page should be nil
 	assert.Nil(t, page)
+	assert.Error(t, err)
 
 	// And no changes should be reflected in the buffer pool
 	assert.Nil(t, pool.pages[0])

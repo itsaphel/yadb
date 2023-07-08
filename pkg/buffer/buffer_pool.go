@@ -42,31 +42,31 @@ func NewBufferPoolWithManager(diskManager io.DiskManager) *BufferPool {
 
 // FetchPage returns a pointer to a Page containing the page ID.
 // It also pins the page by incrementing the page's refCount
-func (pool *BufferPool) FetchPage(pageId PageId) *Page {
+func (pool *BufferPool) FetchPage(pageId PageId) (*Page, error) {
 	// If page is already in buffer pool, return it
 	frameId, found := pool.pageTable[pageId]
 	if found {
 		page := pool.pages[frameId]
 		page.incrementRefCount()
-		return page
+		return page, nil
 	}
 
 	// Otherwise, try to load it from disk into an empty frame
 	frameId = pool.getEmptyFrame()
 	if frameId == FrameNotFound {
-		return nil
+		return nil, errors.New("no empty frame to load page into")
 	}
 
 	data, err := pool.diskManager.ReadPage(pageId)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	page := NewPage(pageId, string(data))
 	page.incrementRefCount()
 	pool.pages[frameId] = page
 	pool.pageTable[pageId] = frameId
 
-	return page
+	return page, nil
 }
 
 // ReleasePage should be called after you're finished with a page.
