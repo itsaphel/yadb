@@ -1,6 +1,7 @@
 package yadb
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,6 +36,27 @@ func TestFetchPage(t *testing.T) {
 	assert.Equal(t, pool.pageTable[1], FrameId(0))
 }
 
+func TestFetchPage_FailsIfIOError(t *testing.T) {
+	// Given
+	diskManager := new(MockDiskManager)
+	diskManager.On("ReadPage", PageId(1)).Return(nil, errors.New("IO Error"))
+
+	pool := NewBufferPoolWithManager(diskManager)
+
+	// When
+	page := pool.FetchPage(1)
+
+	// Then
+
+	// Method should return nil
+	assert.Nil(t, page)
+
+	// And no changes should be reflected in the buffer pool
+	assert.Nil(t, pool.pages[0])
+	_, found := pool.pageTable[1]
+	assert.False(t, found)
+}
+
 // Test helper objects
 
 type MockDiskManager struct {
@@ -43,5 +65,11 @@ type MockDiskManager struct {
 
 func (m MockDiskManager) ReadPage(pageId PageId) (*Page, error) {
 	args := m.Called(pageId)
-	return args.Get(0).(*Page), args.Error(1)
+	firstArg := args.Get(0)
+
+	if firstArg == nil {
+		return nil, args.Error(1)
+	} else {
+		return args.Get(0).(*Page), args.Error(1)
+	}
 }
