@@ -2,8 +2,8 @@ package buffer
 
 import (
 	"errors"
-
 	"yadb-go/pkg/io"
+	. "yadb-go/pkg/types"
 )
 
 const MaxPoolSize = 10
@@ -56,10 +56,11 @@ func (pool *BufferPool) FetchPage(pageId PageId) *Page {
 		return nil
 	}
 
-	page, err := pool.diskManager.ReadPage(pageId)
+	data, err := pool.diskManager.ReadPage(pageId)
 	if err != nil {
 		return nil
 	}
+	page := NewPage(pageId, string(data))
 	page.incrementRefCount()
 	pool.pages[frameId] = page
 	pool.pageTable[pageId] = frameId
@@ -138,4 +139,3 @@ func (p *Page) decrementRefCount() {
 }
 
 type FrameId int
-type PageId uint64

@@ -1,9 +1,9 @@
 package io
 
 import (
-	"yadb-go/pkg/buffer"
+	. "yadb-go/pkg/types"
 )
 
 type DiskManager interface {
-	ReadPage(pageId buffer.PageId) (*buffer.Page, error)
+	ReadPage(pageId PageId) ([]byte, error)
 }
