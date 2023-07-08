@@ -218,9 +218,8 @@ func (n *Node) delete(key string) {
 
 // Node maintenance operations
 
-// truncate functions remove items after & including index i,
-// in a manner that prevents memleaks
-// see https://utcc.utoronto.ca/~cks/space/blog/programming/GoSlicesMemoryLeak
+// truncate functions remove items after & including index i, in a manner that
+// prevents memleaks. see https://utcc.utoronto.ca/~cks/space/blog/programming/GoSlicesMemoryLeak
 
 func (n *Node) truncateKeys(index int) {
 	n.keys = n.keys[:index]

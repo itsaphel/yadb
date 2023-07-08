@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"errors"
+
 	"yadb-go/pkg/io"
 	. "yadb-go/pkg/types"
 )
