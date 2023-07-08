@@ -67,9 +67,9 @@ func (pool *BufferPool) FetchPage(pageId PageId) *Page {
 // It will decrement the refCount, making the frame available for replacement
 // Returns an error if the operation was unsuccessful
 func (pool *BufferPool) ReleasePage(pageId PageId) error {
-	frameId, found := pool.pageTable[pageId]
-	if !found {
-		return errors.New("could not find a frame containing the page")
+	frameId, err := pool.validatePageInBuffer(pageId)
+	if err != nil {
+		return err
 	}
 
 	page := pool.pages[frameId]
@@ -92,6 +92,17 @@ func (pool *BufferPool) getEmptyFrame() FrameId {
 	} else {
 		return FrameNotFound
 	}
+}
+
+// check that the given pageId is currently loaded in the buffer pool, if so
+// return the frame ID, otherwise return an error
+func (pool *BufferPool) validatePageInBuffer(pageId PageId) (FrameId, error) {
+	frameId, found := pool.pageTable[pageId]
+	if !found {
+		return -1, errors.New("could not find a frame containing the page")
+	}
+
+	return frameId, nil
 }
 
 // A Page stores some disk page in memory.
