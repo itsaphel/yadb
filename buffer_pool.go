@@ -1,6 +1,6 @@
 package yadb
 
-import "sync/atomic"
+import "errors"
 
 const MaxPoolSize = 10
 
@@ -36,8 +36,7 @@ func NewBufferPoolWithManager(diskManager DiskManager) *BufferPool {
 }
 
 // FetchPage returns a pointer to a Page containing the page ID.
-// If the page isn't currently loaded into a frame, the buffer pool will load it in.
-// It also pins the page by incrementing the frame's refCount
+// It also pins the page by incrementing the page's refCount
 func (pool *BufferPool) FetchPage(pageId PageId) *Page {
 	// If page is already in buffer pool, return it
 	frameId, found := pool.pageTable[pageId]
@@ -62,6 +61,21 @@ func (pool *BufferPool) FetchPage(pageId PageId) *Page {
 	pool.pageTable[pageId] = frameId
 
 	return page
+}
+
+// ReleasePage should be called after you're finished with a page.
+// It will decrement the refCount, making the frame available for replacement
+// Returns an error if the operation was unsuccessful
+func (pool *BufferPool) ReleasePage(pageId PageId) error {
+	frameId, found := pool.pageTable[pageId]
+	if !found {
+		return errors.New("could not find a frame containing the page")
+	}
+
+	page := pool.pages[frameId]
+	page.decrementRefCount()
+
+	return nil
 }
 
 // FlushPage flushes a page to disk
@@ -90,11 +104,11 @@ type Page struct {
 }
 
 func (p *Page) incrementRefCount() {
-	atomic.AddUint32(&p.refCount, 1)
+	p.refCount++
 }
 
 func (p *Page) decrementRefCount() {
-	atomic.AddUint32(&p.refCount, ^uint32(0))
+	p.refCount--
 }
 
 type FrameId int
