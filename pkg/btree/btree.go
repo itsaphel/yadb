@@ -7,7 +7,7 @@
 // In a B+ Tree, we access at most log_C(N) pages (where N is number of tuples
 // and C is node capacity). The number of comparisons is log_2(N)
 
-package yadb
+package btree
 
 import (
 	"fmt"

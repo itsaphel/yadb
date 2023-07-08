@@ -1,6 +1,10 @@
-package yadb
+package buffer
 
-import "errors"
+import (
+	"errors"
+
+	"yadb-go/pkg/io"
+)
 
 const MaxPoolSize = 10
 
@@ -11,15 +15,15 @@ type BufferPool struct {
 	pages     [MaxPoolSize]*Page
 	freeList  []FrameId // frames that are not currently in use
 	// replacer  *Replacer // some kind of replacement policy
-	diskManager DiskManager
+	diskManager io.DiskManager
 }
 
 func NewBufferPool() *BufferPool {
-	diskManager := new(IODiskManager)
+	diskManager := new(io.IODiskManager)
 	return NewBufferPoolWithManager(diskManager)
 }
 
-func NewBufferPoolWithManager(diskManager DiskManager) *BufferPool {
+func NewBufferPoolWithManager(diskManager io.DiskManager) *BufferPool {
 	freeList := make([]FrameId, 0)
 	pages := [MaxPoolSize]*Page{}
 	for i := 0; i < MaxPoolSize; i++ {
@@ -112,6 +116,17 @@ type Page struct {
 	dirty    bool   // whether the page needs flushing to disk
 	data     string
 	// node     *Node  // null if the page is not yet loaded into memory
+}
+
+// NewPage should be used when loading a new page into the buffer.
+// The newly created page has refCount 0 and is not dirty
+func NewPage(pageId PageId, data string) *Page {
+	return &Page{
+		pageId:   pageId,
+		refCount: 0,
+		dirty:    false,
+		data:     data,
+	}
 }
 
 func (p *Page) incrementRefCount() {

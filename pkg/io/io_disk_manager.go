@@ -1,21 +1,19 @@
-package yadb
+package io
 
 import (
 	"log"
 	"os"
+
+	"yadb-go/pkg/buffer"
 )
 
 const PageSizeInBytes = 8192 // 8kB
-
-type DiskManager interface {
-	ReadPage(pageId PageId) (*Page, error)
-}
 
 type IODiskManager struct {
 	filename string
 }
 
-func (d *IODiskManager) ReadPage(pageId PageId) (*Page, error) {
+func (d *IODiskManager) ReadPage(pageId buffer.PageId) (*buffer.Page, error) {
 	f, err := os.OpenFile(d.filename, os.O_RDONLY, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open data file.", err)
@@ -28,11 +26,6 @@ func (d *IODiskManager) ReadPage(pageId PageId) (*Page, error) {
 		return nil, err
 	}
 
-	page := &Page{
-		pageId:   pageId,
-		refCount: 0,
-		dirty:    false,
-		data:     string(data),
-	}
+	page := buffer.NewPage(pageId, string(data))
 	return page, nil
 }

@@ -1,4 +1,4 @@
-package yadb
+package buffer
 
 import (
 	"errors"
