@@ -2,18 +2,20 @@ package buffer
 
 import (
 	"errors"
+	"unsafe"
 
 	"yadb-go/pkg/io"
 	. "yadb-go/pkg/types"
 )
 
-const MaxPoolSize = 10
-
+const BufferPoolCapacityInBytes = 512000000
+const PageSizeInBytes = int(unsafe.Sizeof(Page{}))
+const MaxPoolSize = BufferPoolCapacityInBytes / PageSizeInBytes
 const FrameNotFound = -1
 
 type BufferPool struct {
 	pageTable map[PageId]FrameId
-	pages     [MaxPoolSize]*Page
+	pages     [MaxPoolSize]Page
 	freeList  []FrameId // frames that are not currently in use
 	// replacer  *Replacer // some kind of replacement policy
 	diskManager io.DiskManager
@@ -34,7 +36,7 @@ func NewBufferPoolWithManager(diskManager io.DiskManager) *BufferPool {
 
 	return &BufferPool{
 		pageTable:   make(map[PageId]FrameId),
-		pages:       [MaxPoolSize]*Page{},
+		pages:       [MaxPoolSize]Page{},
 		freeList:    freeList,
 		diskManager: diskManager,
 	}
@@ -48,7 +50,7 @@ func (pool *BufferPool) FetchPage(pageId PageId) (*Page, error) {
 	if found {
 		page := pool.pages[frameId]
 		page.incrementRefCount()
-		return page, nil
+		return &page, nil
 	}
 
 	// Otherwise, try to load it from disk into an empty frame
@@ -63,7 +65,7 @@ func (pool *BufferPool) FetchPage(pageId PageId) (*Page, error) {
 	}
 	page := NewPage(pageId, string(data))
 	page.incrementRefCount()
-	pool.pages[frameId] = page
+	pool.pages[frameId] = *page
 	pool.pageTable[pageId] = frameId
 
 	return page, nil
