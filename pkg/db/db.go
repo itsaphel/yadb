@@ -1,13 +1,14 @@
-package yadb
+package db
 
 import (
+	"yadb-go/pkg/btree"
 	"yadb-go/pkg/buffer"
 	"yadb-go/pkg/wal"
 	"yadb-go/protoc"
 )
 
 type Database struct {
-	store      map[string]string
+	store      *btree.Tree
 	wal        *wal.LogFile
 	bufferPool *buffer.BufferPool
 }
@@ -17,7 +18,7 @@ func NewDatabase(walFileName string) *Database {
 	wal := wal.NewWalFile(walFileName)
 
 	d := &Database{
-		store:      make(map[string]string),
+		store:      btree.NewTree(10),
 		wal:        wal,
 		bufferPool: new(buffer.BufferPool),
 	}
@@ -27,17 +28,21 @@ func NewDatabase(walFileName string) *Database {
 
 func LoadDatabaseFromWal(walFileName string) *Database {
 	d := NewDatabase(walFileName)
-	d.wal.LoadIntoMap(d.store)
+	d.wal.ReplayIntoStore(d.store)
 
 	return d
 }
 
-func (d *Database) Get(key string) string {
-	return d.store[key]
+func (d *Database) Get(key string) (string, bool) {
+	ret := d.store.Get(key)
+	if ret == nil {
+		return "", false
+	}
+	return ret.Value(), true
 }
 
 func (d *Database) Set(key string, value string) {
-	d.store[key] = value
+	d.store.Insert(key, value)
 	d.wal.Write(&protoc.WalEntry{
 		Key:   key,
 		Value: value,
@@ -45,7 +50,7 @@ func (d *Database) Set(key string, value string) {
 }
 
 func (d *Database) Delete(key string) {
-	delete(d.store, key)
+	d.store.Delete(key)
 	d.wal.Write(&protoc.WalEntry{
 		Key:       key,
 		Tombstone: true,

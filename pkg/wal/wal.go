@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/matttproud/golang_protobuf_extensions/pbutil"
+	"yadb-go/pkg/btree"
 	"yadb-go/protoc"
 )
 
@@ -22,7 +23,7 @@ func NewWalFile(filename string) *LogFile {
 	return &LogFile{filename: filename}
 }
 
-func (logFile *LogFile) LoadIntoMap(m map[string]string) {
+func (logFile *LogFile) ReplayIntoStore(store *btree.Tree) {
 	f, err := os.OpenFile(logFile.filename, os.O_RDONLY, 0644)
 	if err != nil {
 		log.Fatalln("Failed to open WAL file.", err)
@@ -41,9 +42,9 @@ func (logFile *LogFile) LoadIntoMap(m map[string]string) {
 		}
 
 		if walEntry.Tombstone {
-			delete(m, walEntry.Key)
+			store.Delete(walEntry.Key)
 		} else {
-			m[walEntry.Key] = walEntry.Value
+			store.Insert(walEntry.Key, walEntry.Value)
 		}
 	}
 }

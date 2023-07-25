@@ -103,6 +103,10 @@ func (kv *KeyValuePair) String() string {
 	return fmt.Sprintf("KeyValuePair{key=%s, value=%s}", kv.key, kv.value)
 }
 
+func (kv *KeyValuePair) Value() string {
+	return kv.value
+}
+
 // get returns a pointer to the KV Pair if the key exists under this node (or
 // its children, recursively), otherwise returns nil.
 func (n *Node) get(key string) *KeyValuePair {
