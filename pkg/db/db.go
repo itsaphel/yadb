@@ -20,7 +20,7 @@ func NewDatabase(walFileName string) *Database {
 	d := &Database{
 		store:      btree.NewTree(10),
 		wal:        wal,
-		bufferPool: new(buffer.BufferPool),
+		bufferPool: buffer.NewBufferPool(),
 	}
 
 	return d
