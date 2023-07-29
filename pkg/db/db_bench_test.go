@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -33,13 +32,4 @@ func BenchmarkInsert(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		db.Set("key"+strconv.Itoa(i), "some random value")
 	}
-}
-
-func main() {
-
-	fmt.Println(randInt(1, 1000))
-}
-
-func randInt(min int, max int) int {
-	return min + rand.Intn(max-min)
 }
