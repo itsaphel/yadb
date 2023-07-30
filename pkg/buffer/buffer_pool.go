@@ -87,8 +87,19 @@ func (pool *BufferPool) ReleasePage(pageId PageId) error {
 }
 
 // FlushPage flushes a page to disk
-func (pool *BufferPool) FlushPage(pageId PageId) {
+func (pool *BufferPool) FlushPage(pageId PageId) error {
+	frameId, found := pool.pageTable[pageId]
+	if !found {
+		return errors.New("requested to flush page which is not in buffer pool")
+	}
 
+	page := pool.pages[frameId]
+	err := pool.diskManager.FlushPage(pageId, []byte(page.data))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (pool *BufferPool) getEmptyFrame() FrameId {

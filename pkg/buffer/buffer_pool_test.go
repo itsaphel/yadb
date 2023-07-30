@@ -56,6 +56,22 @@ func TestFetchPage_FailsIfIOError(t *testing.T) {
 	assert.False(t, found)
 }
 
+func TestFlushPage(t *testing.T) {
+	// Given
+	diskManager := new(MockDiskManager)
+	diskManager.On("FlushPage", PageId(1)).Return(nil)
+
+	pool := NewBufferPoolWithManager(diskManager)
+	pool.pageTable[1] = 0
+
+	// When
+	err := pool.FlushPage(1)
+
+	// Then
+	assert.NoError(t, err)
+	diskManager.AssertCalled(t, "FlushPage", PageId(1))
+}
+
 // Test helper objects
 
 type MockDiskManager struct {
@@ -71,4 +87,8 @@ func (m *MockDiskManager) ReadPage(pageId PageId) ([]byte, error) {
 	} else {
 		return args.Get(0).([]byte), args.Error(1)
 	}
+}
+
+func (m *MockDiskManager) FlushPage(pageId PageId, _ []byte) error {
+	return m.Called(pageId).Error(0)
 }

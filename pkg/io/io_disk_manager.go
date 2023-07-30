@@ -16,7 +16,7 @@ type IODiskManager struct {
 func (d *IODiskManager) ReadPage(pageId PageId) ([]byte, error) {
 	f, err := os.OpenFile(d.filename, os.O_RDONLY, 0644)
 	if err != nil {
-		log.Fatalln("Failed to open data file.", err)
+		log.Fatalln("Failed to open data file for reading.", err)
 	}
 	defer f.Close()
 
@@ -27,4 +27,20 @@ func (d *IODiskManager) ReadPage(pageId PageId) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func (d *IODiskManager) FlushPage(pageId PageId, data []byte) error {
+	f, err := os.OpenFile(d.filename, os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalln("Failed to open data file for writing.", err)
+	}
+	defer f.Close()
+
+	_, err = f.WriteAt(data, int64(pageId)*PageSizeInBytes)
+	if err != nil {
+		return err
+	}
+
+	// call fsync to guarantee flush to disk
+	return f.Sync()
 }
