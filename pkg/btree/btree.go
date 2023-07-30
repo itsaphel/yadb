@@ -145,6 +145,7 @@ func (n *Node) findLeafNodeForKey(key string) *Node {
 	// Find the child internal Node under which the key would lie, if it were
 	// in the tree rooted by the current node
 	i := n.findIndex(key)
+	// TODO node potentially not loaded
 	return n.pointers[i].(*Node).findLeafNodeForKey(key)
 }
 
@@ -154,6 +155,7 @@ func (n *Node) findLeafNodeForKey(key string) *Node {
 func (n *Node) findKeyInLeaf(key string) (*KeyValuePair, int) {
 	var exact bool
 	i := sort.Search(len(n.pointers), func(i int) bool {
+		// TODO heap data potentially not loaded
 		ret := strings.Compare(n.pointers[i].(*KeyValuePair).key, key)
 		if ret == 0 {
 			exact = true

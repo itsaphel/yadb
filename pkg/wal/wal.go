@@ -67,4 +67,8 @@ func (logFile *LogFile) Write(e *protoc.WalEntry) {
 	if err != nil {
 		log.Fatalln("Failed to write WalEntry to disk.", err)
 	}
+	err = f.Sync()
+	if err != nil {
+		log.Fatalln("Failed to execute fsync WalEntry to disk.", err)
+	}
 }
