@@ -2,6 +2,7 @@ package db
 
 import (
 	"math/rand"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -25,7 +26,8 @@ func BenchmarkGet(b *testing.B) {
 }
 
 func BenchmarkInsert(b *testing.B) {
-	db := NewDatabase("wal")
+	file, _ := os.CreateTemp("", "yadb_wal")
+	db := NewDatabase(file.Name())
 
 	b.ReportAllocs()
 	b.ResetTimer()
