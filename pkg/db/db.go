@@ -1,14 +1,15 @@
 package db
 
 import (
-	"yadb-go/pkg/btree"
 	"yadb-go/pkg/buffer"
+	"yadb-go/pkg/store"
+	"yadb-go/pkg/store/inmemory-btree"
 	"yadb-go/pkg/wal"
 	"yadb-go/protoc"
 )
 
 type Database struct {
-	store      *btree.Tree
+	store      store.Store
 	wal        *wal.LogFile
 	bufferPool *buffer.BufferPool
 }
@@ -18,7 +19,7 @@ func NewDatabase(walFileName string) *Database {
 	wal := wal.NewWalFile(walFileName)
 
 	d := &Database{
-		store:      btree.NewTree(10),
+		store:      inmemory_btree.NewTree(10),
 		wal:        wal,
 		bufferPool: buffer.NewBufferPool(),
 	}
@@ -38,11 +39,11 @@ func (d *Database) Get(key string) (string, bool) {
 	if ret == nil {
 		return "", false
 	}
-	return ret.Value(), true
+	return ret.Value, true
 }
 
 func (d *Database) Set(key string, value string) {
-	d.store.Insert(key, value)
+	d.store.Set(key, value)
 	d.wal.Write(&protoc.WalEntry{
 		Key:   key,
 		Value: value,

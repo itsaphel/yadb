@@ -1,4 +1,4 @@
-package btree
+package inmemory_btree
 
 import "testing"
 
@@ -9,8 +9,8 @@ func TestBranchOperations(t *testing.T) {
 	assertKeyNotFound(t, tree, "someInvalidKey")
 
 	// Test insert/get operations
-	tree.Insert("key", "val")
-	tree.Insert("key2", "val2")
+	tree.Set("key", "val")
+	tree.Set("key2", "val2")
 
 	assertKeyFound(t, tree, "key", "val")
 	assertKeyFound(t, tree, "key2", "val2")
@@ -25,9 +25,9 @@ func TestBranchOperations(t *testing.T) {
 func TestBranchOperations__limitedCapacity(t *testing.T) {
 	tree := NewTree(2)
 
-	tree.Insert("key", "val")
-	tree.Insert("key2", "val2")
-	tree.Insert("key3", "val3")
+	tree.Set("key", "val")
+	tree.Set("key2", "val2")
+	tree.Set("key3", "val3")
 
 	assertKeyFound(t, tree, "key", "val")
 	assertKeyFound(t, tree, "key2", "val2")
@@ -41,12 +41,12 @@ func TestBranchOperations__limitedCapacity(t *testing.T) {
 func TestBranchOperations__largeHeight(t *testing.T) {
 	tree := NewTree(2)
 
-	tree.Insert("key", "val")
-	tree.Insert("key2", "val2")
-	tree.Insert("key3", "val3")
-	tree.Insert("key4", "val4")
-	tree.Insert("key5", "val5")
-	tree.Insert("key6", "val6")
+	tree.Set("key", "val")
+	tree.Set("key2", "val2")
+	tree.Set("key3", "val3")
+	tree.Set("key4", "val4")
+	tree.Set("key5", "val5")
+	tree.Set("key6", "val6")
 
 	assertKeyFound(t, tree, "key", "val")
 	assertKeyFound(t, tree, "key2", "val2")

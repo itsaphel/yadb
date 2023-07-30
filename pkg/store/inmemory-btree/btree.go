@@ -7,12 +7,12 @@
 // In a B+ Tree, we access at most log_C(N) pages (where N is number of tuples
 // and C is node capacity). The number of comparisons is log_2(N)
 
-package btree
+package inmemory_btree
 
 import (
-	"fmt"
 	"sort"
 	"strings"
+	. "yadb-go/pkg/store"
 )
 
 type Tree struct {
@@ -42,15 +42,15 @@ func (tree *Tree) Get(key string) *KeyValuePair {
 	return tree.root.get(key)
 }
 
-// Insert a key-value pair into the tree. The pair will be inserted at the bottom
+// Set a key-value pair into the tree. The pair will be inserted at the bottom
 // of the tree, and changes propagate up to internal nodes if required for splits/merges
-// If an existing value for the key exists, Insert will overwrite the existing value
-func (tree *Tree) Insert(key string, value string) {
+// If an existing value for the key exists, Set will overwrite the existing value
+func (tree *Tree) Set(key string, value string) {
 	// Locate the appropriate leaf to insert into
 	leaf := tree.root.findLeafNodeForKey(key)
 	kvPair := &KeyValuePair{
-		key:   key,
-		value: value,
+		Key:   key,
+		Value: value,
 	}
 
 	leaf.insert(kvPair)
@@ -89,22 +89,6 @@ func (tree *Tree) NewEmptyNode(isLeaf bool) *Node {
 		pointers: make([]interface{}, 0),
 		isLeaf:   isLeaf,
 	}
-}
-
-type KeyValuePair struct {
-	key   string
-	value string
-}
-
-func (kv *KeyValuePair) String() string {
-	if kv == nil {
-		return "nil"
-	}
-	return fmt.Sprintf("KeyValuePair{key=%s, value=%s}", kv.key, kv.value)
-}
-
-func (kv *KeyValuePair) Value() string {
-	return kv.value
 }
 
 // get returns a pointer to the KV Pair if the key exists under this node (or
@@ -156,7 +140,7 @@ func (n *Node) findKeyInLeaf(key string) (*KeyValuePair, int) {
 	var exact bool
 	i := sort.Search(len(n.pointers), func(i int) bool {
 		// TODO heap data potentially not loaded
-		ret := strings.Compare(n.pointers[i].(*KeyValuePair).key, key)
+		ret := strings.Compare(n.pointers[i].(*KeyValuePair).Key, key)
 		if ret == 0 {
 			exact = true
 		}
@@ -194,10 +178,10 @@ func (n *Node) insert(pair *KeyValuePair) {
 	}
 
 	// Find insertion index
-	existing, index := n.findKeyInLeaf(pair.key)
+	existing, index := n.findKeyInLeaf(pair.Key)
 	if existing != nil {
 		// If key is already present, overwrite existing value
-		existing.value = pair.value
+		existing.Value = pair.Value
 	} else {
 		// Otherwise, allocate space for a new KV pair
 		n.pointers = append(n.pointers, nil)
@@ -252,7 +236,7 @@ func (n *Node) split() {
 	splitIndex := n.tree.degree / 2
 	var splitIndexKey string
 	if n.isLeaf {
-		splitIndexKey = n.pointers[splitIndex].(*KeyValuePair).key
+		splitIndexKey = n.pointers[splitIndex].(*KeyValuePair).Key
 	} else {
 		splitIndexKey = n.keys[splitIndex]
 	}
